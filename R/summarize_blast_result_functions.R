@@ -48,7 +48,6 @@ seq_info_df <- data.frame(Rsamtools::seqinfo(bamFile))
 seq_info_df$seqnames <- row.names(seq_info_df)
 allGenomes <- grep("ti|652616", seq_info_df$seqnames, value = TRUE, fixed = TRUE)
 results_df <- read.csv("E:/bls11_S46.metascope_id.csv", header= TRUE)
-"E:\Databases\Blast_nt"
 
 
 # Getting blast metrics and appending to metascope results
