@@ -7,56 +7,29 @@ library(dplyr)
 #library(tidyverse)
 library(tidyr)
 library(R.utils)
+library(rBLAST)
 
 
-# Takes id and bam file, finds all sequence names associated with (it should just be one), maybe just take the first match!
+# 1. takes id and bam file, finds all sequence names associated with (it should just be one), maybe just take the first match!
 # Get ID and full seqname
 # This function only returns a vector of the sequences
 getSeqs <- function(id, bamFile, n = 10) {
-  name <- strsplit(id, "|", fixed = TRUE)[[1]][4]
-  print(name)
-  df <- data.frame(Rsamtools::seqinfo(bamFile))
-  df$seqnames <- row.names(df)
-  allGenomes <- grep(id, df$seqnames, value = TRUE, fixed = TRUE)
+  # Get sequence info (Genome Name) from Bam file
+  seq_info_df <- data.frame(Rsamtools::seqinfo(bamFile))
+  seq_info_df$seqnames <- row.names(seq_info_df)
+  allGenomes <- grep(paste0("ti|", id), seq_info_df$seqnames, value = TRUE, fixed = TRUE)
+  # Sample one of the Genomes that match
   Genome = sample(allGenomes, 1)
+  # Scan Bam file for all sequences that match genome
   param <- ScanBamParam(what = c("rname", "seq"),
                         which = GRanges(Genome, IRanges(1, 1e+07)))
-  x1 <- scanBam(bamFile, param = param)[[1]]
-  #print(x1)
-  seqs <- as.character(x1$seq)
+  allseqs <- scanBam(bamFile, param = param)[[1]]
+  seqs <- as.character(allseqs$seq)
   seqs <- sample(seqs, n)
 
   #print(x)
   return(seqs)
 }
-
-# This function only returns a string of sequences in FASTA format
-getSeqs2 <- function(id, bamFile, n = 10) {
-  name <- strsplit(id, "|", fixed = TRUE)[[1]][4]
-  print(name)
-  df <- data.frame(Rsamtools::seqinfo(bamFile))
-  df$seqnames <- row.names(df)
-  allGenomes <- grep(id, df$seqnames, value = TRUE, fixed = TRUE)
-  ## testing=============
-  #print(allGenomes)
-  #print(class(allGenomes))
-  ##=====================
-  # Randomly select one genoeme and get n sequences from it
-  Genome = sample(allGenomes, 1)
-  #print(Genome)
-  param <- ScanBamParam(what = c("rname", "seq"),
-                        which = GRanges(Genome, IRanges(1, 1e+07)))
-  x1 <- scanBam(bamFile, param = param)[[1]]
-  #print(x1)
-  seqs <- as.character(x1$seq)
-  seqs <- sample(seqs, n)
-  x <- paste(seqs, collapse = paste0("\n>", name, "\n"))
-  x <- paste0(">", name, "\n", x)
-
-  #print(x)
-  return(x)
-}
-
 
 # Sends FASTA formated string to NCBI BLAST URL API
 
@@ -125,8 +98,6 @@ tryParseResult <- function(url, attempts = 30, sleep_time = 60) {
   stop(paste("No results after ", attempts,
              " attempts; please try again later", sep = ""))
 }
-
-
 
 
 # Reads XML formatted BLAST results and converts to dataframe
@@ -342,34 +313,92 @@ blast_single_result <- function(results_table, bam_file, which_result = 1, num_r
 
 
 rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100, hit_list = "10", db_path) {
-  final_df <- NULL
   res <- tryCatch( #If any errors, should just skip the organism
     {
-      id <- results_table[which_result,1]
-      if (!quiet) message("Current id: ", id)
-      ti <- strsplit(id, "|", fixed = TRUE)[[1]][2]
-      if (!quiet) message("Current ti: ", ti)
-      fasta_seqs <- Biostrings::DNAStringSet(getSeqs(id = id, bamFile = bam_file, n = num_reads))
-      blast_db <- blast(db = db_path)
-      df <- predict(blast_db, fastq_seqs,
-                    custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
-                    BLAST_args = "-max_target_seqs 1")
-      df <- gi_to_ti_df(df)
+      genome_name <- results_table[which_result,2]
+      if (!quiet) message("Current id: ", genome_name)
+      tax_id <- results_table[which_result,1]
+      if (!quiet) message("Current ti: ", tax_id)
+      fasta_seqs <- Biostrings::DNAStringSet(getSeqs(id = tax_id, bamFile = bam_file, n = num_reads))
+      blast_db <- blast(db = db_path, type = "blastn")
+      df <- predict(blast_db, fasta_seqs,
+                    custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids \t stitle",
+                    BLAST_args = "-max_target_seqs 10")
+      df$MetaScope_Taxid <- tax_id
+      df$MetaScope_Genome <- genome_name
       df
     },
     error = function(e) {
       cat("Error", conditionMessage(e))
+      df <- data.frame(qseqid=NA, sseqid=NA, pident=NA, length=NA,
+                       mismatch=NA, gapopen=NA, qstart=NA, qend=NA,
+                       sstart=NA, send=NA, evalue=NA, bitscore=NA)
+      df$ti <- tax_id
+      df$genome <- genome_name
+      df
     }
   )
-  print(res)
-  if (is.null(final_df)) {
-    final_df <- res
-  } else {
-    final_df <- rbind(final_df, res)
-  }
-
-  return(final_df)
+  return(df)
 }
+
+
+#' Blast Result Metrics
+#'
+#' @param blast_results_table_path
+#'
+#' @return Loads blast result table (csv) and generates a list of best_hit, uniqueness_score,
+#' percentage_hit and contaminant score
+#'
+#' TODO: ADD ERROR HANDLING
+
+blast_result_metrics <- function(blast_results_table_path,
+                                 uniqueness_score_by = "species",
+                                 percentage_hit_by = "species",
+                                 contaminant_score_by = "genus"){
+  tryCatch(
+    {
+      # Load in blast results table
+      blast_results_table <- read.csv(blast_results_table_path, header = TRUE)
+
+      # Remove any empty tables
+      if (nrow(blast_results_table) == 0) {
+        return(list(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
+      }
+
+      # Get the best blast result for every query (read)
+      lowest_eval_per_query <- blast_results_table %>% group_by(qseqid) %>%
+        slice_min(evalue, with_ties = FALSE)
+      summary_table <- blast_results_table %>% group_by(name) %>% summarise(num_reads = n())
+      summary_table$genus <- strsplit(summary_table$name, split = " ")[[1]][1]
+      summary_table$species <- strsplit(summary_table$name, split = " ")[[1]][2]
+      summary_table_genus <- summary_table %>% group_by(genus) %>% summarise(num_reads = sum(num_reads))
+      summary_table_species <- summary_table %>% group_by(species) %>% summarise(num_reads = sum(num_reads))
+
+      best_hit <- summary_table %>% slice_max(num_reads, with_ties = FALSE)
+      assign(paste0("best_hit_", percentage_hit_by),
+             eval(parse(text = paste0("summary_table_", percentage_hit_by))) %>%
+               slice_max(num_reads, with_ties = FALSE))
+
+      # Calculate Metrics
+      uniqueness_score <- 1/nrow(eval(parse(text = paste0("summary_table_", uniqueness_score_by))))
+
+      percentage_hit <- eval(parse(text = paste0("best_hit_", percentage_hit_by)))$num_reads /
+        sum(eval(parse(text = paste0("summary_table_", percentage_hit_by)))$num_reads)
+
+      contaminant_score <- eval(parse(text = paste0("summary_table_", contaminant_score_by))) %>%
+        arrange(desc(num_reads)) %>% slice(2) %>%
+        select(2) / sum(eval(parse(text = paste0("summary_table_", contaminant_score_by)))
+                        %>% select(num_reads))
+      return(list(best_hit = best_hit$name, uniqueness_score = uniqueness_score, percentage_hit = percentage_hit, contaminant_score = unlist(contaminant_score)))
+    },
+    error = function(e)
+    {
+      cat("Error", conditionMessage(e), "/n")
+      return(list(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
+    }
+  )
+}
+
 
 
 
