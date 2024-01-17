@@ -8,7 +8,7 @@
 suppressPackageStartupMessages({
   library(Rsamtools)
   library(tidyverse)
-  library(ggpubr)
+  #library(ggpubr)
 })
 
 # Helper function -------------------------------------------------------------
@@ -52,10 +52,10 @@ test_species = c(652616, 419947, 1031709, 83331, 1097669, 443149)
 aa=get_locations(input_bam, # Location of bam file
               test_species)
 
-ggpubr::ggarrange(aa[[1]]$plot,
-                  aa[[2]]$plot,
-                  aa[[3]]$plot,
-                  aa[[4]]$plot,
-                  aa[[5]]$plot,
-                  aa[[6]]$plot,
-                  nrow = 3, ncol = 2)
+#ggpubr::ggarrange(aa[[1]]$plot,
+#                  aa[[2]]$plot,
+#                  aa[[3]]$plot,
+#                  aa[[4]]$plot,
+#                  aa[[5]]$plot,
+#                  aa[[6]]$plot,
+#                  nrow = 3, ncol = 2)
