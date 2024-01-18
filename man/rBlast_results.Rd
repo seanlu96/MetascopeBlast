@@ -11,7 +11,8 @@ rBlast_results(
   num_reads_per_result = 100,
   hit_list = "10",
   db_path,
-  out_path
+  out_path,
+  sample_name = NULL
 )
 }
 \arguments{
@@ -27,7 +28,7 @@ rBlast_results(
 
 \item{db_path}{Blast database path}
 
-\item{out_path}{Output directory to save csv files, including basename of files}
+\item{out_path}{Output directory to save csv files, including base name of files}
 }
 \value{
 Creates and exports num_results number of csv files with blast results from local blast

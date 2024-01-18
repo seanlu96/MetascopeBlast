@@ -1,10 +1,11 @@
 #' MetaScope Blast
 #'
-#' @param
+#' @param metascope_id_path
 #'
+#' @export
 #'
 
-meatscope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
+metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
                             num_reads = 100, hit_list = "10", db_path,
                             uniqueness_score_by = "species",
                             percentage_hit_by = "species",
