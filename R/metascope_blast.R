@@ -14,8 +14,9 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   bam_file_path <- list.files(path = tmp_dir, full.names = TRUE)
   sorted_bam_file_path <- file.path(tmp_dir, paste0(sample_name, "_sorted"))
   Rsamtools::sortBam(bam_file_path, destination = sorted_bam_file_path)
-  Rsamtools::indexBam(sorted_bam_file_path, destination = sorted_bam_file_path)
-  bam_file <- Rsamtools::BamFile(sorted_bam_file_path, index = sorted_bam_file_path)
+  sorted_bam_file <- paste0(sorted_bam_file_path, ".bam")
+  Rsamtools::indexBam(sorted_bam_file)
+  bam_file <- Rsamtools::BamFile(sorted_bam_file, index = sorted_bam_file)
 
   # Load in metascope id file and clean unknown genomes
   metascope_id <- read.csv(metascope_id_path, header = TRUE)
