@@ -27,7 +27,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   # Run rBlast on all metascope microbes
   rBlast_results(metascope_id, bam_file, num_results = nrow(metascope_id),
                  num_reads_per_result = num_reads, hit_list = hit_list,
-                 db_path = db_path, out_dir = blast_tmp_dir, sample_name = sample_name)
+                 db_path = db_path, out_path = blast_tmp_dir, sample_name = sample_name)
 
   # Run Blast metrics
   blast_result_metrics_list <- lapply(list.files(blast_tmp_dir, full.names = TRUE),
