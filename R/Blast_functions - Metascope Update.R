@@ -312,7 +312,7 @@ blast_single_result <- function(results_table, bam_file, which_result = 1, num_r
 }
 
 
-rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100, hit_list = "10", db_path) {
+rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100, hit_list = "10", db_path, quiet = TRUE) {
   res <- tryCatch( #If any errors, should just skip the organism
     {
       genome_name <- results_table[which_result,2]
