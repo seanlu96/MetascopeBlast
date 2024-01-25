@@ -322,7 +322,7 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       fasta_seqs <- Biostrings::DNAStringSet(getSeqs(id = tax_id, bamFile = bam_file, n = num_reads))
       blast_db <- blast(db = db_path, type = "blastn")
       df <- predict(blast_db, fasta_seqs,
-                    custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids \t stitle",
+                    custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
                     BLAST_args = "-max_target_seqs 10")
       df$MetaScope_Taxid <- tax_id
       df$MetaScope_Genome <- genome_name

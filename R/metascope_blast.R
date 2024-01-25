@@ -16,7 +16,7 @@
 #'
 #'
 #' @export
-q
+#'
 metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
                             num_reads = 100, hit_list = "10", db_path,
                             uniqueness_score_by = "species",
@@ -34,10 +34,11 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   metascope_id <- read.csv(metascope_id_path, header = TRUE)
 
   # Create blast directory in tmp directory to save blast results in
-  blast_tmp_dir <- dir.create(file.path(tmp_dir,"blast"))
+  blast_tmp_dir <- file.path(tmp_dir,"blast")
+  dir.create(blast_tmp_dir)
 
   # Run rBlast on all metascope microbes
-  rBlast_results(metascope_id, bam_file, num_results = nrow(metascope_id),
+  rBlast_results(results_table = metascope_id, bam_file = bam_file, num_results = nrow(metascope_id),
                  num_reads_per_result = num_reads, hit_list = hit_list,
                  db_path = db_path, out_path = blast_tmp_dir, sample_name = sample_name)
 
