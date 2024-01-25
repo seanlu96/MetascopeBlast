@@ -53,7 +53,7 @@ rBlast_results <- function(results_table, bam_file, num_results = 10, num_reads_
                                num_reads = num_reads_per_result, hit_list = hit_list,
                                db_path = db_path)
     tax_id <- results_table[i,1]
-    write.csv(df, paste0(out_path, sample_name, "_", "tax_id_", tax_id, "_", i, ".csv"))
+    write.csv(df, file.path(out_path, paste0(sample_name, "_", "tax_id_", tax_id, "_", i, ".csv")))
   }
 }
 
