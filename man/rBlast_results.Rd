@@ -2,7 +2,7 @@
 % Please edit documentation in R/rBlast_results.R
 \name{rBlast_results}
 \alias{rBlast_results}
-\title{Local Blast Results}
+\title{rBlast_results}
 \usage{
 rBlast_results(
   results_table,
@@ -34,5 +34,5 @@ rBlast_results(
 Creates and exports num_results number of csv files with blast results from local blast
 }
 \description{
-Local Blast Results
+rBlast_results
 }

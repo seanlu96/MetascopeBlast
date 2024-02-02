@@ -9,6 +9,7 @@ metascope_blast(
   tmp_dir,
   out_dir,
   sample_name,
+  num_results = 10,
   num_reads = 100,
   hit_list = "10",
   db_path,
@@ -18,7 +19,28 @@ metascope_blast(
 )
 }
 \arguments{
-\item{metascope_id_path}{}
+\item{metascope_id_path}{Path for metascope id results file}
+
+\item{tmp_dir}{Path for temporary directory}
+
+\item{out_dir}{Path for output directory}
+
+\item{sample_name}{Sample name for output files}
+
+\item{num_reads}{Max number of reads to blast per microbe}
+
+\item{hit_list}{Character for number of blast hit results to keep}
+
+\item{db_path}{Blast database path}
+
+\item{uniqueness_score_by}{Taxonomy level for determining uniqueness score.
+Default is "species"}
+
+\item{percentage_hit_by}{Taxonomy level for percentage hit.
+Default is "species"}
+
+\item{contaminant_score_by}{Taxonomy level for contaminant score.
+Default is "genus"}
 }
 \description{
 MetaScope Blast

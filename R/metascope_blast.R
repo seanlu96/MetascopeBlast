@@ -18,7 +18,7 @@
 #' @export
 #'
 metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
-                            num_reads = 100, hit_list = "10", db_path,
+                            num_results = 10, num_reads = 100, hit_list = "10", db_path,
                             uniqueness_score_by = "species",
                             percentage_hit_by = "species",
                             contaminant_score_by = "genus") {
@@ -38,7 +38,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   dir.create(blast_tmp_dir)
 
   # Run rBlast on all metascope microbes
-  rBlast_results(results_table = metascope_id, bam_file = bam_file, num_results = nrow(metascope_id),
+  rBlast_results(results_table = metascope_id, bam_file = bam_file, num_results = num_results,
                  num_reads_per_result = num_reads, hit_list = hit_list,
                  db_path = db_path, out_path = blast_tmp_dir, sample_name = sample_name)
 
@@ -51,6 +51,8 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
 
   # Append Blast Metrics to MetaScope results
   blast_result_metrics_df <- as.data.frame(do.call(rbind, blast_result_metrics_list))
+  blast_result_metrics_df[(nrow(blast_result_metrics_df)+1):nrow(metascope_id),] <- NA
+
   metascope_blast_df <- cbind(metascope_id, blast_result_metrics_df)
   write.csv(file.path(out_dir, paste0(sample_name, ".metascope_blast.csv")))
 
