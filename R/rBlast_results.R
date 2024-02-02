@@ -17,10 +17,11 @@ get_seqs <- function(id, bam_file, n = 10) {
   param <- ScanBamParam(what = c("rname", "seq"),
                         which = GRanges(Genome, IRanges(1, 1e+07)))
   allseqs <- scanBam(bam_file, param = param)[[1]]
+  allseqs <- as.character(allseqs)
   seqs <- sample(allseqs, n)
 
   #print(x)
-  return(seqs)
+  return(Biostrings::DNAStringSet(seqs))
 }
 
 
