@@ -17,7 +17,6 @@ get_seqs <- function(id, bam_file, n = 10) {
   param <- ScanBamParam(what = c("rname", "seq"),
                         which = GRanges(Genome, IRanges(1, 1e+07)))
   allseqs <- scanBam(bam_file, param = param)[[1]]
-  seqs <- as.character(allseqs$seq)
   seqs <- sample(seqs, n)
 
   #print(x)
@@ -38,14 +37,14 @@ get_seqs <- function(id, bam_file, n = 10) {
 #' @return Returns a dataframe of blast results for a metascope result
 
 rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100,
-                                 hit_list = 10, num_threads = 1, db_path, quiet = TRUE) {
+                                 hit_list = 10, num_threads = 1, db_path, quiet = FALSE) {
   res <- tryCatch( #If any errors, should just skip the organism
     {
       genome_name <- results_table[which_result,2]
       if (!quiet) message("Current id: ", genome_name)
       tax_id <- results_table[which_result,1]
       if (!quiet) message("Current ti: ", tax_id)
-      fasta_seqs <- Biostrings::DNAStringSet(get_seqs(id = tax_id, bam_file = bam_file, n = num_reads))
+      fasta_seqs <- get_seqs(id = tax_id, bam_file = bam_file, n = num_reads)
       blast_db <- blast(db = db_path, type = "blastn")
       df <- predict(blast_db, fasta_seqs,
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
