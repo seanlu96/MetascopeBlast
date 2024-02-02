@@ -1,4 +1,23 @@
+# 1. takes id and bam file, finds all sequence names associated with (it should just be one), maybe just take the first match!
+# Get ID and full seqname
+# This function only returns a vector of the sequences
+getSeqs <- function(id, bamFile, n = 10) {
+  # Get sequence info (Genome Name) from Bam file
+  seq_info_df <- data.frame(Rsamtools::seqinfo(bamFile))
+  seq_info_df$seqnames <- row.names(seq_info_df)
+  allGenomes <- grep(paste0("ti|", id), seq_info_df$seqnames, value = TRUE, fixed = TRUE)
+  # Sample one of the Genomes that match
+  Genome = sample(allGenomes, 1)
+  # Scan Bam file for all sequences that match genome
+  param <- ScanBamParam(what = c("rname", "seq"),
+                        which = GRanges(Genome, IRanges(1, 1e+07)))
+  allseqs <- scanBam(bamFile, param = param)[[1]]
+  seqs <- as.character(allseqs$seq)
+  seqs <- sample(seqs, n)
 
+  #print(x)
+  return(seqs)
+}
 
 
 rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100, hit_list = "10", db_path, quiet = TRUE) {
