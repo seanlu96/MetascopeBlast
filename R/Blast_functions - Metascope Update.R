@@ -368,9 +368,9 @@ blast_result_metrics <- function(blast_results_table_path,
       # Get the best blast result for every query (read)
       lowest_eval_per_query <- blast_results_table %>% group_by(qseqid) %>%
         slice_min(evalue, with_ties = FALSE)
-      summary_table <- blast_results_table %>% group_by(name) %>% summarise(num_reads = n())
-      summary_table$genus <- strsplit(summary_table$name, split = " ")[[1]][1]
-      summary_table$species <- strsplit(summary_table$name, split = " ")[[1]][2]
+      summary_table <- blast_results_table %>% group_by(MetaScope_Genome) %>% summarise(num_reads = n())
+      summary_table$genus <- strsplit(summary_table$MetaScope_Genome, split = " ")[[1]][1]
+      summary_table$species <- strsplit(summary_table$MetaScope_Genome, split = " ")[[1]][2]
       summary_table_genus <- summary_table %>% group_by(genus) %>% summarise(num_reads = sum(num_reads))
       summary_table_species <- summary_table %>% group_by(species) %>% summarise(num_reads = sum(num_reads))
 
@@ -389,7 +389,7 @@ blast_result_metrics <- function(blast_results_table_path,
         arrange(desc(num_reads)) %>% slice(2) %>%
         select(2) / sum(eval(parse(text = paste0("summary_table_", contaminant_score_by)))
                         %>% select(num_reads))
-      return(list(best_hit = best_hit$name, uniqueness_score = uniqueness_score, percentage_hit = percentage_hit, contaminant_score = unlist(contaminant_score)))
+      return(list(best_hit = best_hit$MetaScope_Genome, uniqueness_score = uniqueness_score, percentage_hit = percentage_hit, contaminant_score = unlist(contaminant_score)))
     },
     error = function(e)
     {

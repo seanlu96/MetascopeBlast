@@ -46,7 +46,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
 
   # Run Blast metrics
   blast_result_metrics_list <- lapply(list.files(blast_tmp_dir, full.names = TRUE),
-                                      blast_result_metrics(),
+                                      blast_result_metrics,
                                       uniqueness_score_by = uniqueness_score_by,
                                       percentage_hit_by = percentage_hit_by,
                                       contaminant_score_by = contaminant_score_by)
