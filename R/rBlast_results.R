@@ -32,11 +32,13 @@ get_seqs <- function(id, bam_file, n = 10) {
 #' @param which_result Index in results_table for which result to Blast search
 #' @param num_reads Number of reads to blast per result
 #' @param hit_list Number of how many blast results to fetch per read
+#' @param num_threads Number of threads if multithreading
 #' @param db_path Blast database path
 #'
 #' @return Returns a dataframe of blast results for a metascope result
 
-rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100, hit_list = 10, db_path, quiet = TRUE) {
+rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_reads = 100,
+                                 hit_list = 10, num_threads = 1, db_path, quiet = TRUE) {
   res <- tryCatch( #If any errors, should just skip the organism
     {
       genome_name <- results_table[which_result,2]
@@ -47,7 +49,7 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       blast_db <- blast(db = db_path, type = "blastn")
       df <- predict(blast_db, fasta_seqs,
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
-                    BLAST_args = paste0("-max_target_seqs ", hit_list))
+                    BLAST_args = paste0("-max_target_seqs ", hit_list, " -num_threads ", num_threads))
       df$MetaScope_Taxid <- tax_id
       df$MetaScope_Genome <- genome_name
       df
@@ -67,8 +69,6 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
 
 
 
-
-
 #' rBlast_results
 #'
 #' @param results_table A dataframe of the Metascope results
@@ -76,17 +76,18 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
 #' @param num_results A number indicating number of Metascope results to blast
 #' @param num_reads_per_result A number indicating number of reads to blast per result
 #' @param hit_list A number of how many blast results to fetch for each read
+#' @param num_threads Number of threads if multithreading
 #' @param db_path Blast database path
 #' @param out_path Output directory to save csv files, including base name of files
 #'
 #' @return Creates and exports num_results number of csv files with blast results from local blast
 
-rBlast_results <- function(results_table, bam_file, num_results = 10, num_reads_per_result = 100, hit_list = "10",
-                           db_path, out_path, sample_name = NULL) {
+rBlast_results <- function(results_table, bam_file, num_results = 10, num_reads_per_result = 100, hit_list = 10,
+                           num_threads = 1, db_path, out_path, sample_name = NULL) {
   for (i in seq.int(num_results)) {
     df <- rBLAST_single_result(results_table, bam_file, which_result = i,
                                num_reads = num_reads_per_result, hit_list = hit_list,
-                               db_path = db_path)
+                               num_threads = num_threads, db_path = db_path)
     tax_id <- results_table[i,1]
     write.csv(df, file.path(out_path, paste0(sample_name, "_", "tax_id_", tax_id, "_", i, ".csv")))
   }

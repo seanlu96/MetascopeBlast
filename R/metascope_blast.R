@@ -6,6 +6,7 @@
 #' @param sample_name Sample name for output files
 #' @param num_reads Max number of reads to blast per microbe
 #' @param hit_list Character for number of blast hit results to keep
+#' @param num_threads Number of threads if multithreading
 #' @param db_path Blast database path
 #' @param uniqueness_score_by Taxonomy level for determining uniqueness score.
 #' Default is "species"
@@ -18,7 +19,8 @@
 #' @export
 #'
 metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
-                            num_results = 10, num_reads = 100, hit_list = "10", db_path,
+                            num_results = 10, num_reads = 100, hit_list = 10,
+                            num_threads = 1, db_path,
                             uniqueness_score_by = "species",
                             percentage_hit_by = "species",
                             contaminant_score_by = "genus") {
@@ -39,7 +41,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
 
   # Run rBlast on all metascope microbes
   rBlast_results(results_table = metascope_id, bam_file = bam_file, num_results = num_results,
-                 num_reads_per_result = num_reads, hit_list = hit_list,
+                 num_reads_per_result = num_reads, hit_list = hit_list, num_threads = num_threads,
                  db_path = db_path, out_path = blast_tmp_dir, sample_name = sample_name)
 
   # Run Blast metrics
