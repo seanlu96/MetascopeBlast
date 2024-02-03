@@ -59,12 +59,14 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       df <- data.frame(qseqid=NA, sseqid=NA, pident=NA, length=NA,
                        mismatch=NA, gapopen=NA, qstart=NA, qend=NA,
                        sstart=NA, send=NA, evalue=NA, bitscore=NA, staxids=NA)
+      tax_id <- results_table[which_result,1]
+      genome_name <- results_table[which_result,2]
       df$ti <- tax_id
       df$genome <- genome_name
       df
     }
   )
-  return(df)
+  return(res)
 }
 
 
