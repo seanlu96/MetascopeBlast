@@ -56,7 +56,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   blast_result_metrics_df[(nrow(blast_result_metrics_df)+1):nrow(metascope_id),] <- NA
 
   metascope_blast_df <- cbind(metascope_id, blast_result_metrics_df)
-  write.csv(file.path(out_dir, paste0(sample_name, ".metascope_blast.csv")))
+  write.csv(metascope_blast_df, file.path(out_dir, paste0(sample_name, ".metascope_blast.csv")))
 
   # TODO: Apply Filters for blast metrics
 }
