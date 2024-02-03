@@ -55,14 +55,14 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       df
     },
     error = function(e) {
-      cat("Error", conditionMessage(e))
+      cat("Error", conditionMessage(e), "\n")
       df <- data.frame(qseqid=NA, sseqid=NA, pident=NA, length=NA,
                        mismatch=NA, gapopen=NA, qstart=NA, qend=NA,
                        sstart=NA, send=NA, evalue=NA, bitscore=NA, staxids=NA)
       tax_id <- results_table[which_result,1]
       genome_name <- results_table[which_result,2]
-      df$ti <- tax_id
-      df$genome <- genome_name
+      df$MetaScope_Taxid <- tax_id
+      df$MetaScope_Genome <- genome_name
       df
     }
   )
