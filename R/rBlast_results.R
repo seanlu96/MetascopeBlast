@@ -17,11 +17,11 @@ get_seqs <- function(id, bam_file, n = 10) {
   param <- ScanBamParam(what = c("rname", "seq"),
                         which = GRanges(Genome, IRanges(1, 1e+07)))
   allseqs <- scanBam(bam_file, param = param)[[1]]
-  allseqs <- as.character(allseqs)
+  n = max(n, length(allseqs))
   seqs <- sample(allseqs, n)
 
   #print(x)
-  return(Biostrings::DNAStringSet(seqs))
+  return(seqs)
 }
 
 
@@ -47,7 +47,7 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       if (!quiet) message("Current ti: ", tax_id)
       fasta_seqs <- get_seqs(id = tax_id, bam_file = bam_file, n = num_reads)
       blast_db <- blast(db = db_path, type = "blastn")
-      df <- predict(blast_db, fasta_seqs,
+      df <- rBLAST::predict(blast_db, fasta_seqs,
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
                     BLAST_args = paste0("-max_target_seqs ", hit_list, " -num_threads ", num_threads))
       df$MetaScope_Taxid <- tax_id
