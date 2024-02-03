@@ -17,8 +17,8 @@ get_seqs <- function(id, bam_file, n = 10) {
   param <- ScanBamParam(what = c("rname", "seq"),
                         which = GRanges(Genome, IRanges(1, 1e+07)))
   allseqs <- scanBam(bam_file, param = param)[[1]]
-  n = max(n, length(allseqs))
-  seqs <- sample(allseqs, n)
+  n = min(n, length(allseqs$seq))
+  seqs <- sample(allseqs$seq, n)
 
   #print(x)
   return(seqs)
