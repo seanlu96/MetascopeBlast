@@ -362,7 +362,7 @@ blast_result_metrics <- function(blast_results_table_path,
 
       # Remove any empty tables
       if (nrow(blast_results_table) == 0) {
-        return(list(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
+        return(data.frame(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
       }
 
       # Get the best blast result for every query (read)
@@ -385,16 +385,25 @@ blast_result_metrics <- function(blast_results_table_path,
       percentage_hit <- eval(parse(text = paste0("best_hit_", percentage_hit_by)))$num_reads /
         sum(eval(parse(text = paste0("summary_table_", percentage_hit_by)))$num_reads)
 
-      contaminant_score <- eval(parse(text = paste0("summary_table_", contaminant_score_by))) %>%
-        arrange(desc(num_reads)) %>% slice(2) %>%
-        select(2) / sum(eval(parse(text = paste0("summary_table_", contaminant_score_by)))
-                        %>% select(num_reads))
-      return(list(best_hit = best_hit$MetaScope_Genome, uniqueness_score = uniqueness_score, percentage_hit = percentage_hit, contaminant_score = unlist(contaminant_score)))
+      if (eval(parse(text = paste0("summary_table_", contaminant_score_by))) %>% nrow() == 1) {
+        contaminant_score <- 0
+      } else{
+        contaminant_score <- eval(parse(text = paste0("summary_table_", contaminant_score_by))) %>%
+          arrange(desc(num_reads)) %>% slice(2) %>%
+          select(2) / sum(eval(parse(text = paste0("summary_table_", contaminant_score_by)))
+                          %>% select(num_reads))
+      }
+
+
+      return(data.frame(best_hit = best_hit$MetaScope_Genome,
+                        uniqueness_score = uniqueness_score,
+                        percentage_hit = percentage_hit,
+                        contaminant_score = contaminant_score))
     },
     error = function(e)
     {
       cat("Error", conditionMessage(e), "/n")
-      return(list(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
+      return(data.frame(best_hit = 0, uniqueness_score = 0, percentage_hit = 0, contaminant_score = 0))
     }
   )
 }
