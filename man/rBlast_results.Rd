@@ -9,7 +9,8 @@ rBlast_results(
   bam_file,
   num_results = 10,
   num_reads_per_result = 100,
-  hit_list = "10",
+  hit_list = 10,
+  num_threads = 1,
   db_path,
   out_path,
   sample_name = NULL
@@ -25,6 +26,8 @@ rBlast_results(
 \item{num_reads_per_result}{A number indicating number of reads to blast per result}
 
 \item{hit_list}{A number of how many blast results to fetch for each read}
+
+\item{num_threads}{Number of threads if multithreading}
 
 \item{db_path}{Blast database path}
 

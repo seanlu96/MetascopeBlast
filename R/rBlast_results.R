@@ -25,6 +25,31 @@ get_seqs <- function(id, bam_file, n = 10) {
 }
 
 
+#' taxid_to_name
+#'
+#' @param taxids List of NCBI taxids to convert to scientific name
+#' @param batch_size Number of taxids to submit to enterez (Need Key), max 10
+#'
+#' NCBI_key <- ""
+#' options("ENTREZ_KEY" = NCBI_key)
+#'
+#' @return Returns a dataframe of blast results for a metascope result
+
+taxid_to_name <- function(taxids, batch_size = 10) {
+  nums <- length(taxids)
+  i = 1
+  df = data.frame(staxids = NULL, name = NULL)
+  while (i < length(taxids)) {
+    tmp_df <- taxize::id2name(taxids[i:min(i+batch_size-1, nums)], db = "ncbi") %>%
+      do.call(rbind, .) %>% rename(staxids = id) %>% select(staxids, name)
+    df <- rbind(df, tmp_df)
+    i = i + batch_size
+    Sys.sleep(1)
+  }
+  df <- transform(df, staxids = as.integer(staxids))
+  return(df)
+}
+
 #' rBLAST_single_result
 #'
 #' @param results_table A dataframe of the Metascope results
@@ -50,9 +75,11 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       df <- predict(blast_db, fasta_seqs,
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
                     BLAST_args = paste0("-max_target_seqs ", hit_list, " -num_threads ", num_threads))
+      taxize_genome_df <- taxid_to_name(unique(df$staxids))
+      df$genome <- taxize_genome_name
       df$MetaScope_Taxid <- tax_id
       df$MetaScope_Genome <- genome_name
-      df
+      df <- left_join(df, taxize_genome_df, by = staxids)
     },
     error = function(e) {
       cat("Error", conditionMessage(e), "\n")
@@ -63,7 +90,7 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       genome_name <- results_table[which_result,2]
       df$MetaScope_Taxid <- tax_id
       df$MetaScope_Genome <- genome_name
-      df
+      df$name <- NA
     }
   )
   return(res)

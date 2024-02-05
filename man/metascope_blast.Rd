@@ -11,7 +11,8 @@ metascope_blast(
   sample_name,
   num_results = 10,
   num_reads = 100,
-  hit_list = "10",
+  hit_list = 10,
+  num_threads = 1,
   db_path,
   uniqueness_score_by = "species",
   percentage_hit_by = "species",
@@ -30,6 +31,8 @@ metascope_blast(
 \item{num_reads}{Max number of reads to blast per microbe}
 
 \item{hit_list}{Character for number of blast hit results to keep}
+
+\item{num_threads}{Number of threads if multithreading}
 
 \item{db_path}{Blast database path}
 

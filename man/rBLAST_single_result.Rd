@@ -10,8 +10,9 @@ rBLAST_single_result(
   which_result = 1,
   num_reads = 100,
   hit_list = 10,
+  num_threads = 1,
   db_path,
-  quiet = TRUE
+  quiet = FALSE
 )
 }
 \arguments{
@@ -24,6 +25,8 @@ rBLAST_single_result(
 \item{num_reads}{Number of reads to blast per result}
 
 \item{hit_list}{Number of how many blast results to fetch per read}
+
+\item{num_threads}{Number of threads if multithreading}
 
 \item{db_path}{Blast database path}
 }
