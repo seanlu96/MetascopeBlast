@@ -39,7 +39,7 @@ taxid_to_name <- function(taxids, batch_size = 10) {
   nums <- length(taxids)
   i = 1
   df = data.frame(staxids = NULL, name = NULL)
-  while (i < length(taxids)) {
+  while (i <= length(taxids)) {
     tmp_df <- taxize::id2name(taxids[i:min(i+batch_size-1, nums)], db = "ncbi") %>%
       do.call(rbind, .) %>% rename(staxids = id) %>% select(staxids, name)
     df <- rbind(df, tmp_df)
@@ -72,24 +72,26 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       if (!quiet) message("Current ti: ", tax_id)
       fasta_seqs <- get_seqs(id = tax_id, bam_file = bam_file, n = num_reads)
       blast_db <- blast(db = db_path, type = "blastn")
-      df <- predict(blast_db, fasta_seqs,
+      blast_res <- predict(blast_db, fasta_seqs,
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
                     BLAST_args = paste0("-max_target_seqs ", hit_list, " -num_threads ", num_threads))
-      taxize_genome_df <- taxid_to_name(unique(df$staxids))
-      df$MetaScope_Taxid <- tax_id
-      df$MetaScope_Genome <- genome_name
-      df <- left_join(df, taxize_genome_df, by = staxids)
+      taxize_genome_df <- taxid_to_name(unique(blast_res$staxids))
+      blast_res$MetaScope_Taxid <- tax_id
+      blast_res$MetaScope_Genome <- genome_name
+      blast_res <- left_join(blast_res, taxize_genome_df, by = "staxids")
+      blast_res
     },
     error = function(e) {
       cat("Error", conditionMessage(e), "\n")
-      df <- data.frame(qseqid=NA, sseqid=NA, pident=NA, length=NA,
+      blast_res <- data.frame(qseqid=NA, sseqid=NA, pident=NA, length=NA,
                        mismatch=NA, gapopen=NA, qstart=NA, qend=NA,
                        sstart=NA, send=NA, evalue=NA, bitscore=NA, staxids=NA)
       tax_id <- results_table[which_result,1]
       genome_name <- results_table[which_result,2]
-      df$MetaScope_Taxid <- tax_id
-      df$MetaScope_Genome <- genome_name
-      df$name <- NA
+      blast_res$MetaScope_Taxid <- tax_id
+      blast_res$MetaScope_Genome <- genome_name
+      blast_res$name <- NA
+      blast_res
     }
   )
   return(res)
