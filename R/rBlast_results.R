@@ -76,7 +76,6 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
                     custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
                     BLAST_args = paste0("-max_target_seqs ", hit_list, " -num_threads ", num_threads))
       taxize_genome_df <- taxid_to_name(unique(df$staxids))
-      df$genome <- taxize_genome_name
       df$MetaScope_Taxid <- tax_id
       df$MetaScope_Genome <- genome_name
       df <- left_join(df, taxize_genome_df, by = staxids)
