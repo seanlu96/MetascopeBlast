@@ -8,6 +8,7 @@ library(dplyr)
 library(tidyr)
 library(R.utils)
 library(rBLAST)
+library(stringr)
 
 
 # 1. takes id and bam file, finds all sequence names associated with (it should just be one), maybe just take the first match!
