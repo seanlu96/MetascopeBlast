@@ -168,10 +168,10 @@ blast_result_metrics <- function(blast_results_table_path){
 
       # Adding Species and Genus columns
       blast_results_table <- blast_results_table %>%
-        dplyr::mutate(.data$MetaScope_genus = word(.data$MetaScope_Genome, 1, 1, sep = " ")) %>%
-        dplyr::mutate(.data$MetaScope_species = word(.data$MetaScope_Genome, 1, 2, sep = " ")) %>%
-        dplyr::mutate(.data$query_genus = word(.data$name, 1, 1, sep = " ")) %>%
-        dplyr::mutate(.data$query_species = word(.data$name, 1, 2, sep = " "))
+        dplyr::mutate('MetaScope_genus' = word(.data$MetaScope_Genome, 1, 1, sep = " ")) %>%
+        dplyr::mutate('MetaScope_species' = word(.data$MetaScope_Genome, 1, 2, sep = " ")) %>%
+        dplyr::mutate('query_genus' = word(.data$name, 1, 1, sep = " ")) %>%
+        dplyr::mutate('query_species' = word(.data$name, 1, 2, sep = " "))
 
       # Removing duplicate query num and query species
       blast_results_table <- blast_results_table %>%
@@ -180,21 +180,23 @@ blast_result_metrics <- function(blast_results_table_path){
       # Calculating Metrics
       best_hit <- blast_results_table %>%
         dplyr::group_by(.data$query_species) %>%
-        dplyr::summarise(.data$num_reads = n()) %>%
+        dplyr::summarise('num_reads' = n()) %>%
         dplyr::slice_max(.data$num_reads, with_ties = FALSE)
 
       uniqueness_score <- blast_results_table %>%
         dplyr::group_by(.data$query_species) %>%
-        dplyr::summarise(.data$num_reads = n()) %>%
+        dplyr::summarise('num_reads' = n()) %>%
         nrow()
 
       species_percentage_hit <- blast_results_table %>%
         dplyr::filter(.data$MetaScope_species == .data$query_species) %>%
-        nrow() / length(unique(blast_results_table$qseqid))
+        dplyr::distinct(.data$qseqid) %>% nrow() /
+        length(unique(blast_results_table$qseqid))
 
       genus_percentage_hit <- blast_results_table %>%
         dplyr::filter(.data$MetaScope_genus == .data$query_genus) %>%
-        nrow() / length(unique(blast_results_table$qseqid))
+        dplyr::distinct(.data$qseqid) %>% nrow() /
+        length(unique(blast_results_table$qseqid))
 
       species_contaminant_score <- blast_results_table %>%
         dplyr::filter(.data$MetaScope_species != .data$query_species) %>%
