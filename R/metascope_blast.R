@@ -278,7 +278,7 @@ blast_result_metrics <- function(blast_results_table_path){
 #' unlink(file_temp, recursive = TRUE)
 #'
 
-metascope_blast <- function(metascope_id_path, ref_dir, out_dir, sample_name,
+metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
                             num_results = 10, num_reads = 100, hit_list = 10,
                             num_threads = 1, db_path) {
 
