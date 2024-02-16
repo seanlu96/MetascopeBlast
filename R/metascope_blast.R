@@ -16,11 +16,16 @@ library(stringr)
 #'
 #' @return Biostrings format sequences
 
-get_seqs <- function(id, bam_file, n = 10) {
+get_seqs <- function(id, genome_name, bam_file, n = 10, db = "ncbi") {
+
   # Get sequence info (Genome Name) from bam file
   seq_info_df <- data.frame(Rsamtools::seqinfo(bam_file))
   seq_info_df$seqnames <- row.names(seq_info_df)
-  allGenomes <- grep(paste0("ti|", id), seq_info_df$seqnames, value = TRUE, fixed = TRUE)
+  if (db == "ncbi") {
+    allGenomes <- grep(paste0("ti|", id), seq_info_df$seqnames, value = TRUE, fixed = TRUE)
+  } else if (db == "silva") {
+    allGenomes <- grep(genome_name, seq_info_df$seqnames, value = TRUE, fixed = TRUE)
+  }
   # Sample one of the Genomes that match
   Genome = sample(allGenomes, 1)
   # Scan Bam file for all sequences that match genome
@@ -44,19 +49,37 @@ get_seqs <- function(id, bam_file, n = 10) {
 #'
 #' @return Returns a dataframe of blast results for a metascope result
 
-taxid_to_name <- function(taxids, batch_size = 10) {
+taxid_to_name <- function(taxids, batch_size = 10, attempts = 3) {
   nums <- length(taxids)
   i = 1
+  attempt = 1
+  success = FALSE
   df = data.frame(staxids = NULL, name = NULL)
-  while (i <= length(taxids)) {
-    tmp_df <- taxize::id2name(taxids[i:min(i+batch_size-1, nums)], db = "ncbi") %>%
-      do.call(rbind, .) %>% rename(staxids = id) %>% select(staxids, name)
-    df <- rbind(df, tmp_df)
-    i = i + batch_size
-    Sys.sleep(1)
+  while ((attempt < attempts) & success != TRUE) {
+    attempt = attempt + 1
+    tryCatch(
+      {
+        while (i <= length(taxids)) {
+          tmp_df <- taxize::id2name(taxids[i:min(i+batch_size-1, nums)], db = "ncbi") %>%
+            do.call(rbind, .) %>% rename(staxids = id) %>% select(staxids, name)
+          df <- rbind(df, tmp_df)
+          i = i + batch_size
+          Sys.sleep(1)
+        }
+        success = TRUE
+      },
+      error = function(e) {
+        message(e)
+        Sys.sleep(1)
+        })
+    }
+  if (nrow(df) == 0) {
+    return(df)
   }
-  df <- transform(df, staxids = as.integer(staxids))
-  return(df)
+  else{
+    df <- transform(df, staxids = as.integer(staxids))
+    return(df)
+  }
 }
 
 #' rBLAST_single_result
@@ -79,7 +102,7 @@ rBLAST_single_result <- function(results_table, bam_file, which_result = 1, num_
       if (!quiet) message("Current id: ", genome_name)
       tax_id <- results_table[which_result,1]
       if (!quiet) message("Current ti: ", tax_id)
-      fasta_seqs <- get_seqs(id = tax_id, bam_file = bam_file, n = num_reads)
+      fasta_seqs <- get_seqs(id = tax_id, genome_name = genome_name, bam_file = bam_file, n = num_reads)
       blast_db <- rBLAST::blast(db = db_path, type = "blastn")
       blast_res <- rBLAST::predict(blast_db, fasta_seqs,
                                    custom_format ="qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore staxids",
@@ -291,7 +314,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   bam_file <- Rsamtools::BamFile(sorted_bam_file, index = sorted_bam_file)
 
   # Load in metascope id file and clean unknown genomes
-  metascope_id <- read.csv(metascope_id_path, header = TRUE)
+  metascope_id <- read.csv(metascope_id_path, header = TRUE)w
 
   # Create blast directory in tmp directory to save blast results in
   blast_tmp_dir <- file.path(tmp_dir,"blast")
