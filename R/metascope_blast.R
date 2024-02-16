@@ -314,7 +314,7 @@ metascope_blast <- function(metascope_id_path, tmp_dir, out_dir, sample_name,
   bam_file <- Rsamtools::BamFile(sorted_bam_file, index = sorted_bam_file)
 
   # Load in metascope id file and clean unknown genomes
-  metascope_id <- read.csv(metascope_id_path, header = TRUE)w
+  metascope_id <- read.csv(metascope_id_path, header = TRUE)
 
   # Create blast directory in tmp directory to save blast results in
   blast_tmp_dir <- file.path(tmp_dir,"blast")
